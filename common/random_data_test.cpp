@@ -11,7 +11,7 @@
 int main()
 {
     std::vector<int> vec = random_int(15, 1, 30);
-    print(std::cout, vec);
+    print(std::cout, vec, '=');
     return 0;
 }
 

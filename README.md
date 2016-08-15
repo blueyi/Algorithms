@@ -1,2 +1,2 @@
 # Algorithms
-Algorithms 4 study summary
+Algorithms study summary
