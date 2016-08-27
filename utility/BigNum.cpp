@@ -385,14 +385,18 @@ BigInt BigInt::operator+(const BigInt&rhs) const
     res.vnum = vadd(this->vnum, rhs.vnum);
     res.zero = false;
 
-    if (negative && rhs.negative) { // 正加正
+    if (negative && rhs.negative) { // 负加负
         res.negative = true;
     }
     else if (negative && !rhs.negative) { //负加正
-        res = rhs - *this;
+        BigInt lhs(*this);
+        lhs.negative = false;
+        res = rhs - lhs;
     }
     else if (!negative && rhs.negative) { //正加负
-        res = *this - rhs;
+        BigInt rrhs(rhs);
+        rrhs.negative = false;
+        res = *this - rrhs;
     }
 
     return res;
@@ -404,9 +408,12 @@ BigInt BigInt::operator-(const BigInt&rhs) const
 
     if (rhs.zero)
         return *this;
+
     if (this->zero) {
         res = *this;
         res.negative = !negative;
+        if (rhs.zero)
+            res.zero = true;
         return res;
     }
 
@@ -415,6 +422,7 @@ BigInt BigInt::operator-(const BigInt&rhs) const
     if (vcompare(this->vnum, rhs.vnum) == -1) {
         long_vec = rhs.vnum;
         short_vec = this->vnum;
+        res.negative = true;
     }
     else {
         long_vec = this->vnum;
@@ -424,14 +432,16 @@ BigInt BigInt::operator-(const BigInt&rhs) const
     res.vnum = vsub(long_vec, short_vec);
     res.zero = false;
 
-    if (negative && rhs.negative) { // 正加正
+    if (negative && rhs.negative) { // 负减负
+        res.negative = !res.negative;
+    }
+    else if (negative && !rhs.negative) { //负减正
         res.negative = true;
+        res.vnum = vadd(vnum, rhs.vnum);
     }
-    else if (negative && !rhs.negative) { //负加正
-        res = rhs - *this;
-    }
-    else if (!negative && rhs.negative) { //正加负
-        res = *this - rhs;
+    else if (!negative && rhs.negative) { //正减负
+        res.negative = false;
+        res.vnum = vadd(vnum, rhs.vnum);
     }
 
     return res;
@@ -443,7 +453,7 @@ int main(void)
 {
     BigInt aint, bint;
     while (std::cin >> aint >> bint) {
-        std::cout << aint + bint << std::endl;
+        std::cout << aint - bint << std::endl;
     }
     return 0;
 }
