@@ -44,10 +44,13 @@ void printList(const ListNode *head)
 int deleteNode(ListNode *head)
 {
     int cnt = 0;
+    ListNode *p = head;
     while (head != nullptr) {
-        ListNode *p = head;
+        p = head;
         head = head->next;
+        std::cout << "**" << &p << std::endl;
         delete p;
+        std::cout << "**" << &p << std::endl;
         ++cnt;
     }
     return cnt;

@@ -49,9 +49,12 @@ struct ListNode* reverse(struct ListNode *head)
 int delete(struct ListNode *head)
 {
     int cont = 0;
+    struct ListNode *p;
     while (head != NULL) {
-        free(head);
+        p = head;
         head = head->next;
+        free(p);
+        printf("**%d\n", sizeof(p));
         ++cont;
     }
     return cont;
