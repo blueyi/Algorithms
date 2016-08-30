@@ -1,5 +1,7 @@
 tags
 *.swp
+*.exe
+
 
 # Compiled Object files
 *.slo

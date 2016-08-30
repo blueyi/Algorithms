@@ -13,8 +13,11 @@
 #include <vector>
 #include <stdexcept>
 #include <cassert>
+#include <sstream>
+#include <fstream>
+#include <chrono>
 
-// #define NDEBUG
+#define NDEBUG
 
 template <typename T>
 std::ostream& DEBUG(const T& t, const std::string &msg = "DEBUG", std::ostream& os = std::cout)
@@ -22,6 +25,16 @@ std::ostream& DEBUG(const T& t, const std::string &msg = "DEBUG", std::ostream& 
     os << "=" << msg << "=" << t << "==" << std::endl;
     return os;
 }
+std::ostream& DEBUG(const std::vector<uint32_t> &vec, const std::string &msg = "DEBUG", std::ostream& os = std::cout)
+{
+    os << "=" << msg << "=" ;
+    for (auto v : vec)
+        os << std::setw(4) << std::setfill('0') << v << " ";
+    os << "==" << std::endl;
+    return os;
+}
+
+
 
 //按10000进制划分数字，因为相乘后的10^8不会越界
 const int DEC = 4; 
@@ -51,7 +64,8 @@ public:
     friend std::vector<uint32_t> vadd(const std::vector<uint32_t> &, const std::vector<uint32_t> &);
     // 存有正整数的vec相减，大减小，lsh - rhs
     friend std::vector<uint32_t> vsub(const std::vector<uint32_t> &, const std::vector<uint32_t> &);
-
+    // 存有正整数的vec相乘
+    friend std::vector<uint32_t> vmul(const std::vector<uint32_t> &, const std::vector<uint32_t> &);
 
 
     BigInt() : negative(false), zero(true) { vnum.push_back(0); }
@@ -107,10 +121,12 @@ bool operator>(const BigInt&lhs, const BigInt&rhs)
 {
     const std::vector<uint32_t> &lhsv = lhs.vnum;
     const std::vector<uint32_t> &rhsv = rhs.vnum;
+/*
 #ifndef NDEBUG
     DEBUG(lhs, "lhs");
     DEBUG(rhs, "rhs");
 #endif
+*/
     if (lhs.negative && ((!rhs.negative) || rhs.zero))
         return false;
 
@@ -118,9 +134,11 @@ bool operator>(const BigInt&lhs, const BigInt&rhs)
         return true;
 
     if ((lhs.negative && rhs.negative) || (!lhs.negative && !rhs.negative)) {
+/*
 #ifndef NDEBUG
         DEBUG(vcompare(lhsv, rhsv), "vcom");
 #endif
+*/
         int vcom = vcompare(lhsv, rhsv);
         if (vcom == 1) {
             if (!lhs.negative)
@@ -260,10 +278,14 @@ std::ostream& BigInt::print(std::ostream& os) const
     if (negative)
         os << '-';
 
+    bool first_nozero = false;  //从第一个非0开始输出
     for (std::vector<uint32_t>::size_type i = 0; i < vnum.size(); ++i) {
-        if (i != 0)
+        if (vnum[i] != 0 )
+            first_nozero = true;
+
+        if (i != 0 && first_nozero)
             os << std::setw(4) << std::setfill('0') << vnum[i];
-        else
+        else if (first_nozero || i == (vnum.size() - 1))
             os << vnum[i];
     }
     return os;
@@ -285,23 +307,30 @@ std::istream& operator>>(std::istream& os, BigInt& num)
 
 std::vector<uint32_t> vadd(const std::vector<uint32_t> &lhs, const std::vector<uint32_t> &rhs)
 {
-    std::vector<uint32_t> rvnum(rhs);
     std::vector<uint32_t> lvnum(lhs);
-    std::reverse(rvnum.begin(), rvnum.end());
+    std::vector<uint32_t> rvnum(rhs);
     std::reverse(lvnum.begin(), lvnum.end());
+    std::reverse(rvnum.begin(), rvnum.end());
 
     std::vector<uint32_t> &long_vec = rvnum;
     std::vector<uint32_t> &short_vec = lvnum;
+
     if (rvnum.size() < lvnum.size()) {
-        long_vec = lvnum;
-        short_vec = rvnum;
+        std::swap(long_vec, short_vec);
     } 
+
+    /*
+#ifndef NDEBUG
+    DEBUG(long_vec, "lvec");
+    DEBUG(short_vec, "svec");
+#endif
+*/
 
     int carry = 0;
     std::vector<uint32_t> resvnum;
     std::vector<uint32_t>::size_type sindex = 0;
     int pow = quick_pow10(DEC);
-        
+
     for (; sindex < short_vec.size(); ++sindex) {
         uint32_t res = long_vec[sindex] + short_vec[sindex] + carry;
         resvnum.push_back(res % pow);
@@ -319,13 +348,54 @@ std::vector<uint32_t> vadd(const std::vector<uint32_t> &lhs, const std::vector<u
     return resvnum;
 }
 
+std::vector<uint32_t> vadd_reverse(const std::vector<uint32_t> &lhs, const std::vector<uint32_t> &rhs)
+{
+    std::vector<uint32_t> lvnum(lhs);
+    std::vector<uint32_t> rvnum(rhs);
+
+    std::vector<uint32_t> &long_vec = rvnum;
+    std::vector<uint32_t> &short_vec = lvnum;
+
+    if (rvnum.size() < lvnum.size()) {
+        std::swap(long_vec, short_vec);
+    } 
+
+    /*
+#ifndef NDEBUG
+    DEBUG(long_vec, "lvec");
+    DEBUG(short_vec, "svec");
+#endif
+*/
+
+    int carry = 0;
+    std::vector<uint32_t> resvnum;
+    std::vector<uint32_t>::size_type sindex = 0;
+    int pow = quick_pow10(DEC);
+
+    for (; sindex < short_vec.size(); ++sindex) {
+        uint32_t res = long_vec[sindex] + short_vec[sindex] + carry;
+        resvnum.push_back(res % pow);
+        carry = res / pow;
+    }
+    for (; sindex < long_vec.size(); ++sindex) {
+        uint32_t res = long_vec[sindex] + carry;
+        resvnum.push_back(res % pow);
+        carry = res / pow;
+    }
+    if (carry != 0)
+        resvnum.push_back(carry);
+
+    return resvnum;
+}
+
+
 
 std::vector<uint32_t> vsub(const std::vector<uint32_t> &lhs, const std::vector<uint32_t> &rhs)
 {
-     std::vector<uint32_t> rvnum(rhs);
     std::vector<uint32_t> lvnum(lhs);
-    std::reverse(rvnum.begin(), rvnum.end());
+    std::vector<uint32_t> rvnum(rhs);
     std::reverse(lvnum.begin(), lvnum.end());
+    std::reverse(rvnum.begin(), rvnum.end());
 
     int carry = 0;
     std::vector<uint32_t> resvnum;
@@ -349,7 +419,7 @@ std::vector<uint32_t> vsub(const std::vector<uint32_t> &lhs, const std::vector<u
             }
         }
         else {
-            res = lvnum[sindex] - rvnum[sindex];
+            res = lvnum[sindex] - carry - rvnum[sindex];
             carry = 0;
         }
 
@@ -373,6 +443,56 @@ std::vector<uint32_t> vsub(const std::vector<uint32_t> &lhs, const std::vector<u
 
 }
 
+
+std::vector<uint32_t> vmul(const std::vector<uint32_t> &lhs, const std::vector<uint32_t> &rhs)
+{
+    std::vector<uint32_t> lvnum(lhs);
+    std::vector<uint32_t> rvnum(rhs);
+    std::reverse(lvnum.begin(), lvnum.end());
+    std::reverse(rvnum.begin(), rvnum.end());
+
+    std::vector<uint32_t> &long_vec = rvnum;
+    std::vector<uint32_t> &short_vec = lvnum;
+
+    if (rvnum.size() < lvnum.size()) {
+        std::swap(long_vec, short_vec);
+    } 
+
+    std::vector<uint32_t> resvnum{0};
+    std::vector<uint32_t>::size_type sindex = 0, lindex = 0;
+    int pow = quick_pow10(DEC);
+
+    for (; sindex < short_vec.size(); ++sindex) {
+        std::vector<uint32_t> resv;
+        uint32_t carry = 0;
+        std::vector<uint32_t>::size_type i = 0;
+        while (i++ < sindex) {
+            resv.push_back(0);
+        }
+        for (lindex = 0; lindex < long_vec.size(); ++lindex) {
+            uint32_t res = long_vec[lindex] * short_vec[sindex] + carry;
+            resv.push_back(res % pow);
+            carry = res / pow;
+        }
+
+        if (carry != 0)
+            resv.push_back(carry);
+
+#ifndef NDEBUG
+        DEBUG(resv, "resv");
+        DEBUG(carry, "carry");
+        DEBUG(resvnum, "resvnum");
+#endif
+
+        resvnum = vadd_reverse(resvnum, resv);
+    }
+
+    std::reverse(resvnum.begin(), resvnum.end());
+    return resvnum;
+}
+
+
+
 BigInt BigInt::operator+(const BigInt&rhs) const
 {
     if (rhs.zero)
@@ -380,9 +500,9 @@ BigInt BigInt::operator+(const BigInt&rhs) const
     if (this->zero)
         return rhs;
 
-
     BigInt res;
-    res.vnum = vadd(this->vnum, rhs.vnum);
+
+    res.vnum = vadd(this->vnum, rhs.vnum);  //正加正
     res.zero = false;
 
     if (negative && rhs.negative) { // 负加负
@@ -447,14 +567,76 @@ BigInt BigInt::operator-(const BigInt&rhs) const
     return res;
 }
 
+BigInt BigInt::operator*(const BigInt&rhs) const
+{
+    BigInt res;
+    if (rhs.zero || this->zero) {
+        return res;
+    }
 
+    res.vnum = vmul(this->vnum, rhs.vnum);  //正乘正，负乘负
+    res.zero = false;
+
+    if ((negative && !rhs.negative) || (!negative && rhs.negative)) { //负乘正，正乘负
+        res.negative = true;
+    }
+
+    return res;
+}
+
+BigInt BigInt::operator/(const BigInt&rhs) const
+{
+    BigInt res;
+
+    return res;
+}
+
+BigInt cacBigInt(const std::string &str)
+{
+    std::istringstream is(str);
+    char op;
+    BigInt lnum, rnum, res;
+    is >> lnum >> op >> rnum;
+    /*
+#ifndef NDEBUG
+DEBUG(lnum);
+DEBUG(op);
+DEBUG(rnum);
+#endif
+*/
+    switch(op) {
+        case '+':
+            res = lnum + rnum; break;
+        case '-':
+            res = lnum - rnum; break;
+        case '*':
+            res = lnum * rnum; break;
+        case '/':
+            res = lnum / rnum; break;
+    }
+    return res;
+}
 
 int main(void)
 {
-    BigInt aint, bint;
-    while (std::cin >> aint >> bint) {
-        std::cout << aint - bint << std::endl;
+    std::ifstream inf("cal.txt");
+    std::string line;
+    while (std::getline(inf, line) && !line.empty()) {
+        std::cout << "==" << std::endl;
+        auto t_start = std::chrono::high_resolution_clock::now();
+
+        std::cout << cacBigInt(line) << std::endl;
+
+        auto t_end = std::chrono::high_resolution_clock::now();
+        std::cout << std::fixed << std::setprecision(5) << "---Caculate time: "
+                  << std::chrono::duration<double, std::micro>(t_end - t_start).count()
+                  << " μs---" << std::endl;
+        std::cout << "==" << std::endl;
     }
+    inf.close();
+
+    getchar();
+
     return 0;
 }
 
