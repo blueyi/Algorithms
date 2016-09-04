@@ -16,12 +16,13 @@
 //通过多次遍历所有元素，每次遍历时比较相邻两个元素的大小，将较小的元素调整到上面，直到所有元素都有序
 
 template <typename T>
-void bubbleSort(std::vector<T> vec)
+void bubbleSort(std::vector<T>& vec)
 {
-    int N = vec.size();
-    bool isSorted = true;
+    std::size_t N = vec.size();
+    bool isSorted = false;
     while (!isSorted) {
-        for (std::vector<T>::size_t i = 0; i < N; ++i) {
+        isSorted = true;
+        for (std::size_t i = 0; i < N; ++i) {
             if (vec[i] > vec[i + 1]) {
                 std::swap(vec[i], vec[i + 1]);
                 isSorted = false;

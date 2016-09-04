@@ -11,6 +11,7 @@
 #include <random>
 #include <ctime>
 #include <ostream>
+#include <iostream>
 #include <string>
 
 std::vector<int> random_int(std::size_t count, int min = 0, int max = 100)
@@ -35,7 +36,7 @@ std::vector<double> random_real(std::size_t count, int min = 0, int max = 100)
     return rreal;
 }
 
-template <typename T> std::ostream& print(std::ostream &os, const std::vector<T> &vec, const char ch = '0', T max = 100)
+template <typename T> std::ostream& print(const std::vector<T> &vec, std::ostream &os = std::cout, const char ch = '0', T max = 100)
 {
 //    std::size_t i = 0;
 //    while (i++ < vec.size())
