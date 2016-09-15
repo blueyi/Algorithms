@@ -5,12 +5,23 @@
 int main(void)
 {
     std::vector<int> rdata = random_int(15);
-    print(rdata, std::cout, '=');
-    bubbleSort(rdata);
-    print(rdata, std::cout, '=');
-    insertSort(rdata);
-    print(rdata, std::cout, '=');
-    selectSort(rdata);
-    print(rdata, std::cout, '*');
+    print(rdata, std::cout, '=', "Original arr");
+
+    std::vector<int> trdata = rdata;
+    bubbleSort(trdata);
+    print(trdata, std::cout, '=', "bubble sort");
+
+    trdata = rdata;
+    insertSort(trdata);
+    print(trdata, std::cout, '=', "insert sort");
+
+    trdata = rdata;
+    selectSort(trdata);
+    print(trdata, std::cout, '=', "select sort");
+
+    trdata = rdata;
+    quickSort(trdata);
+    print(trdata, std::cout, '*', "quick sort");
+
     return 0;
 }
