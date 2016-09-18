@@ -20,8 +20,12 @@ int main(void)
     print(trdata, std::cout, '=', "select sort");
 
     trdata = rdata;
+    mergeSort(trdata);
+    print(trdata, std::cout, '*', "merge sort");
+
+    trdata = rdata;
     quickSort(trdata);
-    print(trdata, std::cout, '*', "quick sort");
+    print(trdata, std::cout, '=', "quick sort");
 
     return 0;
 }
