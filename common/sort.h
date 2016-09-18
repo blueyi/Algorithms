@@ -106,7 +106,7 @@ std::size_t quick_partion(std::vector<T> &vec, std::size_t lo, std::size_t hi)
 template <typename T>
 void quickSort(std::vector<T> &vec, std::size_t lo, std::size_t hi)
 {
-    if (hi > lo)
+    if (hi <= lo)
         return;
     std::size_t pivot = quick_partion(vec, lo, hi);
     quickSort(vec, lo, pivot);
