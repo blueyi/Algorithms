@@ -21,7 +21,7 @@ int main(void)
 
     trdata = rdata;
     mergeSort(trdata);
-    print(trdata, std::cout, '*', "merge sort");
+    print(trdata, std::cout, '=', "merge sort");
 
     trdata = rdata;
     quickSort(trdata);

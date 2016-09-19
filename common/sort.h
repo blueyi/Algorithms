@@ -96,11 +96,11 @@ void selectSort(std::vector<T> &vec)
 template <typename T>
 void merge(std::vector<T> &vec, std::size_t lo, std::size_t mid, std::size_t hi)  //将两个已经有序的子序列合并到原序列中
 {
-    std::vector<T> tvec;
+    std::vector<T> tvec;  //声明一个临时vector，用于存放前面一半的序列
     for (std::size_t i = lo; i <= mid; ++i)
         tvec.push_back(vec[i]);
-    for (std::size_t i = lo, j = 0, k = mid + 1; (j < mid - lo + 1) || (k <= hi);) {
-        if (((j < mid-lo+1) && (k > hi)) || (tvec[j] <= vec[k])) vec[i++] = tvec[j++];
+    for (std::size_t i = lo, j = 0, k = mid + 1; (j < mid - lo + 1) || (k <= hi);) {  //通过比较后将两组序列合并为一组有序序列
+        if (((j < mid-lo+1) && (k > hi)) || (tvec[j] <= vec[k])) vec[i++] = tvec[j++];  //多加||前面的那个判断是为了将当某一组剩余的序列直接追加后已经合并后的有序序列之后
         if (((j >= mid-lo+1) && (k <= hi)) || (vec[k] < tvec[j])) vec[i++] = vec[k++];
     }
 }
@@ -115,7 +115,7 @@ void merge_partion(std::vector<T> &vec, std::size_t lo, std::size_t hi)
     merge(vec, lo, mid, hi);
 }
 
-//重载一下
+//重载一下，方便调用
 template <typename T>
 void mergeSort(std::vector<T> &vec)
 {
@@ -141,10 +141,10 @@ std::size_t quick_partion(std::vector<T> &vec, std::size_t lo, std::size_t hi)
     //默认选择第一个作为轴点，但这样容易导致左右不平衡，可以考虑取出3个元素，选择位于中间的元素作为轴点
     T pivot = vec[lo];  //保存轴点元素，留出空间用于移动元素
     while (lo < hi) {
-        while (lo < hi && pivot <= vec[hi])
+        while (lo < hi && pivot <= vec[hi])  //将右侧小于轴点的元素值移动到轴点左边
             --hi;
         vec[lo] = vec[hi];
-        while (lo < hi && pivot >= vec[lo])
+        while (lo < hi && pivot >= vec[lo])  //将左侧大于轴点元素的值移动到轴点右边
             ++lo;
         vec[hi] = vec[lo];
     }
@@ -156,9 +156,9 @@ std::size_t quick_partion(std::vector<T> &vec, std::size_t lo, std::size_t hi)
 template <typename T>
 void quickSort(std::vector<T> &vec, std::size_t lo, std::size_t hi)
 {
-    if (hi <= lo)
+    if (hi <= lo)  //当只剩下一个元素时即已经有序
         return;
-    std::size_t pivot = quick_partion(vec, lo, hi);
+    std::size_t pivot = quick_partion(vec, lo, hi);  //
     quickSort(vec, lo, pivot);
     quickSort(vec, pivot + 1, hi);
 }
